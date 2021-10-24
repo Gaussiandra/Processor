@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/assembler.dir/assembler.cpp.o CMakeFiles/assembler.dir/main.cpp.o -o assembler 
