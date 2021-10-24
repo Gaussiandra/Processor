@@ -9,19 +9,19 @@ int main(const int argc, const char *argv[]) {
         outFilePath = (char*) argv[2];
     }
     else {
-        printf("Invalid command line arguments.\nUsage: main.out input_path output_path\n");
+        printf("Invalid command line arguments.\nUsage: main.out input_path output_path.\n");
         return ARGUMENTS_HANDLING_ERROR;
     }
 
     char *rawData = nullptr;
     stringData *strings = nullptr;
     size_t nStrings = 0;
-    CONTINUE_IFN0(getRawDataFromFile(inpFilePath, &rawData, &strings, &nStrings));
+    CONTINUE_IFN0(prepareStringsFromPath(inpFilePath, &rawData, &strings, &nStrings));
 
     processorData_t outputArray[MAX_OUTPUT_ARRAY_LEN] = {0};
     size_t nArrayElements = mapTextToCodes(strings, nStrings, outputArray);
 
-    CONTINUE_IFN0(saveArrayToFile(outputArray, nArrayElements, outFilePath));
+    CONTINUE_IFN0(saveArrayToBinFile(outputArray, nArrayElements, outFilePath));
     
     free(rawData);
     rawData = nullptr;

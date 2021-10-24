@@ -1,4 +1,4 @@
-push 2
+push 2 ; init
 push 5
 push ax
 push bx
@@ -17,4 +17,6 @@ pop [bx + 1]
 mul
 add
 sub
-hlt
+add
+mul
+hlt ; end
