@@ -1,3 +1,0 @@
-/home/ilya/code/processor_task/assembler/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/ilya/code/processor_task/assembler/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/ilya/code/processor_task/assembler/cmake-build-debug/CMakeFiles/assembler.dir
