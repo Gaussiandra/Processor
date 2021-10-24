@@ -11,6 +11,10 @@ out
 push 4
 push 1
 out
+in
+push 2
+add
+out
 push ax
 push bx
 push dx

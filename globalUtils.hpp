@@ -1,11 +1,11 @@
 #include <cstdio>
 #include <cstdlib>
 
-#define CONTINUE_IFN0(code) {      \
+#define CONTINUE_IFN0(code) {          \
     ProcErrorCodes errorCode = (code); \
-    if (errorCode) {               \
-        return errorCode;          \
-    }                              \
+    if (errorCode) {                   \
+        return errorCode;              \
+    }                                  \
 }
 
 struct stringData {

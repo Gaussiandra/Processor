@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include "processor.hpp"
 #include "../SaveStack/stack.hpp"
-// #include "../processorUtils.hpp"
 #include "../globalUtils.hpp"
 
 int main(const int argc, const char *argv[]) {
@@ -117,6 +116,13 @@ int main(const int argc, const char *argv[]) {
                 stackPop(&stack, &a);
                 stackPop(&stack, &b);
                 stackPush(&stack, a - b);
+
+                break;
+            }
+            case 6: {
+                processorData_t a = 0;
+                scanf("%d", &a);
+                stackPush(&stack, a);
 
                 break;
             }
