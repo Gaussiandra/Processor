@@ -58,7 +58,7 @@ ProcErrorCodes parseArgument(char *string, size_t cmdLen, processorData_t *idxCm
             *idxCmd |= IMMEDIATE_CONST_CMD | MEMORY_CMD;
         }
         else if (sscanf(string, "%*s [%1[abcd]x + %c]", strArg, arg) == 2) {
-            // как поведёт себя с минусом?
+            // как поведёт себя с минусом? // сделать проверку на допустимость регистра, запретить pop 4
             *idxCmd |= IMMEDIATE_CONST_CMD | REGISTER_CMD | MEMORY_CMD;
             *arg = ((strArg[0] - 'a') << REGISTER_OFFSET_ARG) + *arg - '0';
         }

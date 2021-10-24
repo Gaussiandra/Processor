@@ -1,5 +1,16 @@
 push 2 ; init
 push 5
+out
+push 3
+mul
+out
+push 1
+push 3
+add
+out
+push 4
+push 1
+out
 push ax
 push bx
 push dx
