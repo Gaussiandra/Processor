@@ -5,6 +5,7 @@
 #include "../SaveStack/stack.hpp"
 #include "../globalUtils.hpp"
 
+// дефайн для общего случая(всё корректно), проверку в pop в asm, проверки
 int main(const int argc, const char *argv[]) {
     char *inpFilePath = nullptr;
     if (argc == 2) {
@@ -23,7 +24,7 @@ int main(const int argc, const char *argv[]) {
     processorData_t ram[RAM_LEN] = {0};
     processorData_t registers[N_REGISTERS] = {0};
     stack_t stack;
-    stackCtor(stack); //&?
+    stackCtor(stack);
 
     while (rawData[instuctionPtr]) {
         printf("cmd: %d\n", rawData[instuctionPtr]);
@@ -31,29 +32,15 @@ int main(const int argc, const char *argv[]) {
 
         switch (curNumCmd) {
             case 1: {
-                processorData_t fullCurCmd  = rawData[instuctionPtr],
-                                nextFullCmd = rawData[instuctionPtr + 1],
-                                curCmdFlags = fullCurCmd & FLAGS_RANGE_CMD;
-
-                if (IMMEDIATE_CONST_CMD == curCmdFlags) {
-                    stackPush(&stack, nextFullCmd);
+                if ((rawData[instuctionPtr] & FLAGS_RANGE_CMD) == IMMEDIATE_CONST_CMD) {
+                    stackPush(&stack, rawData[instuctionPtr + 1]);
                 }
-                else if (REGISTER_CMD == curCmdFlags) {
-                    stackPush(&stack, registers[nextFullCmd & REGISTER_VALUE_ARG]);
-                }
-                else if ((IMMEDIATE_CONST_CMD | MEMORY_CMD) == curCmdFlags) {
-                    stackPush(&stack, getFromRam(ram, nextFullCmd & ARGUMENT_VALUE_RANGE_ARG));
-                }
-                else if ((REGISTER_CMD | MEMORY_CMD) == curCmdFlags) {
-                    stackPush(&stack, getFromRam(ram, registers[nextFullCmd & REGISTER_VALUE_ARG]));
-                }
-                else if ((REGISTER_CMD | IMMEDIATE_CONST_CMD | MEMORY_CMD) == curCmdFlags) {
-                    processorData_t registerValue = registers[nextFullCmd & REGISTER_VALUE_ARG],
-                                    argumentValue = nextFullCmd & ARGUMENT_VALUE_RANGE_ARG;
-                    stackPush(&stack, getFromRam(ram, registerValue + argumentValue));
+                else if (processorData_t *pushArg = getPtrWrtFlags(rawData + instuctionPtr, registers, ram)) {
+                    stackPush(&stack, *pushArg);
                 }
                 else {
-                    printf("Unknown flag set. Command = %d\n", fullCurCmd);
+                    printf("Unknown flag set. Command = %d\n", rawData[instuctionPtr]);
+                    fflush(stdout);
                     abort();
                 }
 
@@ -61,34 +48,16 @@ int main(const int argc, const char *argv[]) {
                 break;
             }
             case 2: {
-                processorData_t fullCurCmd  = rawData[instuctionPtr],
-                                nextFullCmd = rawData[instuctionPtr + 1],
-                                curCmdFlags = fullCurCmd & FLAGS_RANGE_CMD;
-
-                /*if (IMMEDIATE_CONST_CMD == curCmdFlags) {
-                    stackPush(&stack, nextFullCmd);
-                }
-                else*/
-                if (REGISTER_CMD == curCmdFlags) {
-                    stackPop(&stack, &registers[nextFullCmd & REGISTER_VALUE_ARG]);
-                }
-                else if ((IMMEDIATE_CONST_CMD | MEMORY_CMD) == curCmdFlags) {
-                    stackPop(&stack, &ram[nextFullCmd & ARGUMENT_VALUE_RANGE_ARG]);
-                }
-                else if ((REGISTER_CMD | MEMORY_CMD) == curCmdFlags) {
-                    stackPop(&stack, &ram[registers[nextFullCmd & REGISTER_VALUE_ARG]]);
-                }
-                else if ((REGISTER_CMD | IMMEDIATE_CONST_CMD | MEMORY_CMD) == curCmdFlags) {
-                    processorData_t registerValue = registers[nextFullCmd & REGISTER_VALUE_ARG],
-                                    argumentValue = nextFullCmd & ARGUMENT_VALUE_RANGE_ARG;
-                    stackPop(&stack, &ram[registerValue + argumentValue]);
-                }
-                else if (0 == curCmdFlags) {
+                if ((rawData[instuctionPtr] & FLAGS_RANGE_CMD) == 0) {
                     processorData_t value;
                     stackPop(&stack, &value);
                 }
+                else if (processorData_t *popArg = getPtrWrtFlags(rawData + instuctionPtr, registers, ram)) {
+                    stackPop(&stack, popArg);
+                }
                 else {
-                    printf("Unknown flag set. Command = %d\n", fullCurCmd);
+                    printf("Unknown flag set. Command = %d\n", rawData[instuctionPtr]);
+                    fflush(stdout);
                     abort();
                 }
 
@@ -143,12 +112,29 @@ int main(const int argc, const char *argv[]) {
     return 0;
 }
 
-processorData_t getFromRam(processorData_t ram[], size_t addr) {
+processorData_t* accessRam(processorData_t ram[], size_t addr) {
     usleep(RAM_ACCESS_DELAY_MS);
-    return ram[addr];
+    return ram + addr;
 }
 
-void putInRam(processorData_t ram[], size_t addr, processorData_t value) {
-    usleep(RAM_ACCESS_DELAY_MS);
-    ram[addr] = value;
+processorData_t* getPtrWrtFlags(processorData_t *curCmdPtr, processorData_t registers[], processorData_t ram[]) {
+    processorData_t nextFullCmd = *(curCmdPtr + 1),
+                    curCmdFlags = *curCmdPtr & FLAGS_RANGE_CMD;
+
+    if (REGISTER_CMD == curCmdFlags) {
+        return &registers[nextFullCmd & REGISTER_VALUE_ARG];
+    }
+    else if ((IMMEDIATE_CONST_CMD | MEMORY_CMD) == curCmdFlags) {
+        return accessRam(ram, nextFullCmd & ARGUMENT_VALUE_RANGE_ARG);
+    }
+    else if ((REGISTER_CMD | MEMORY_CMD) == curCmdFlags) {
+        return accessRam(ram, registers[nextFullCmd & REGISTER_VALUE_ARG]);
+    }
+    else if ((REGISTER_CMD | IMMEDIATE_CONST_CMD | MEMORY_CMD) == curCmdFlags) {
+        processorData_t registerValue = registers[nextFullCmd & REGISTER_VALUE_ARG],
+                        argumentValue = nextFullCmd & ARGUMENT_VALUE_RANGE_ARG;
+        return accessRam(ram, registerValue + argumentValue);
+    }
+
+    return nullptr;
 }
