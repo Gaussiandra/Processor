@@ -8,6 +8,12 @@
     }                                  \
 }
 
+#define ABORT_WITH_PRINTF(format) {    \
+    printf format;                     \
+    fflush(stdout);                    \
+    abort();                           \
+}
+
 struct stringData {
     char *str = nullptr;
     size_t length = 0;
@@ -20,6 +26,7 @@ enum ProcErrorCodes {
     SIZE_GETTING_ERROR,
     MEM_ALLOCATION_ERROR,
     UNKNOWN_COMMAND,
+    LABEL_INDEX_NOT_FOUND,
 };
 
 ProcErrorCodes prepareStringsFromPath(const char *inpFilePath, char **rawData, stringData **strings, size_t *nStrings);

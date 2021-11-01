@@ -5,7 +5,6 @@
 #include "../SaveStack/stack.hpp"
 #include "../globalUtils.hpp"
 
-// дефайн для общего случая(всё корректно), проверку в pop в asm, проверки
 int main(const int argc, const char *argv[]) {
     char *inpFilePath = nullptr;
     if (argc == 2) {
@@ -16,9 +15,9 @@ int main(const int argc, const char *argv[]) {
         return ARGUMENTS_HANDLING_ERROR;
     }
 
-    processorData_t *rawData = nullptr;
+    processorData_t *codeArr = nullptr;
     size_t szFile = 0;
-    CONTINUE_IFN0(readDataFromPath(inpFilePath, (char **)&rawData, &szFile, true));
+    CONTINUE_IFN0(readDataFromPath(inpFilePath, (char **)&codeArr, &szFile, true));
 
     size_t instuctionPtr = 0;
     processorData_t ram[RAM_LEN] = {0};
@@ -26,88 +25,28 @@ int main(const int argc, const char *argv[]) {
     stack_t stack;
     stackCtor(stack);
 
-    while (rawData[instuctionPtr]) {
-        printf("cmd: %d\n", rawData[instuctionPtr]);
-        processorData_t curNumCmd = rawData[instuctionPtr] >> COMMAND_OFFSET_CMD;
+    while (codeArr[instuctionPtr]) {
+        processorData_t curNumCmd = codeArr[instuctionPtr] >> COMMAND_OFFSET_CMD;
+
+        #define DEFINE_CMD_(name, index, argType, code)                             \
+            case index: {                                                           \
+                code;                                                               \
+                break;                                                              \
+            }
 
         switch (curNumCmd) {
-            case 1: {
-                if ((rawData[instuctionPtr] & FLAGS_RANGE_CMD) == IMMEDIATE_CONST_CMD) {
-                    stackPush(&stack, rawData[instuctionPtr + 1]);
-                }
-                else if (processorData_t *pushArg = getPtrWrtFlags(rawData + instuctionPtr, registers, ram)) {
-                    stackPush(&stack, *pushArg);
-                }
-                else {
-                    printf("Unknown flag set. Command = %d\n", rawData[instuctionPtr]);
-                    fflush(stdout);
-                    abort();
-                }
-
-                ++instuctionPtr;
+            #include "../commands.hpp"
+            default:
+                ABORT_WITH_PRINTF(("Unknown command %d", codeArr[instuctionPtr]));
                 break;
-            }
-            case 2: {
-                if ((rawData[instuctionPtr] & FLAGS_RANGE_CMD) == 0) {
-                    processorData_t value;
-                    stackPop(&stack, &value);
-                }
-                else if (processorData_t *popArg = getPtrWrtFlags(rawData + instuctionPtr, registers, ram)) {
-                    stackPop(&stack, popArg);
-                }
-                else {
-                    printf("Unknown flag set. Command = %d\n", rawData[instuctionPtr]);
-                    fflush(stdout);
-                    abort();
-                }
-
-                ++instuctionPtr;
-                break;
-            }
-            case 3: {
-                processorData_t a = 0, b = 0;
-                stackPop(&stack, &a);
-                stackPop(&stack, &b);
-                stackPush(&stack, a * b);
-
-                break;
-            }
-            case 4: {
-                processorData_t a = 0, b = 0;
-                stackPop(&stack, &a);
-                stackPop(&stack, &b);
-                stackPush(&stack, a + b);
-
-                break;
-            }
-            case 5: {
-                processorData_t a = 0, b = 0;
-                stackPop(&stack, &a);
-                stackPop(&stack, &b);
-                stackPush(&stack, a - b);
-
-                break;
-            }
-            case 6: {
-                processorData_t a = 0;
-                scanf("%d", &a);
-                stackPush(&stack, a);
-
-                break;
-            }
-            case 7: {
-                processorData_t a = 0;
-                stackPop(&stack, &a);
-                printf("%d\n", a);
-
-                break;
-            }
         }
+        #undef DEFINE_CMD_
 
-        ++instuctionPtr;
+        //stackDump(&stack, ErrorCodes::OKAY, stdout); printf("\n\n");
+        usleep(2000);
     }
-    free(rawData);
-    rawData = nullptr;
+    free(codeArr);
+    codeArr = nullptr;
 
     return 0;
 }
@@ -122,13 +61,13 @@ processorData_t* getPtrWrtFlags(processorData_t *curCmdPtr, processorData_t regi
                     curCmdFlags = *curCmdPtr & FLAGS_RANGE_CMD;
 
     if (REGISTER_CMD == curCmdFlags) {
-        return &registers[nextFullCmd & REGISTER_VALUE_ARG];
+        return registers + ((nextFullCmd & REGISTER_VALUE_ARG) >> (FLAGS_RANGE_CMD - 1));
     }
     else if ((IMMEDIATE_CONST_CMD | MEMORY_CMD) == curCmdFlags) {
         return accessRam(ram, nextFullCmd & ARGUMENT_VALUE_RANGE_ARG);
     }
     else if ((REGISTER_CMD | MEMORY_CMD) == curCmdFlags) {
-        return accessRam(ram, registers[nextFullCmd & REGISTER_VALUE_ARG]);
+        return accessRam(ram, registers[(nextFullCmd & REGISTER_VALUE_ARG) >> (FLAGS_RANGE_CMD - 1)]);
     }
     else if ((REGISTER_CMD | IMMEDIATE_CONST_CMD | MEMORY_CMD) == curCmdFlags) {
         processorData_t registerValue = registers[nextFullCmd & REGISTER_VALUE_ARG],

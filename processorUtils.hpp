@@ -1,10 +1,16 @@
 #include <cstdint>
 
-#define DEFINE_CMD_(name, index, nArguments, code) name = (index),
-enum Commands {
-    #include "commands.hpp"
+// #define DEFINE_CMD_(name, index, nArguments, code) name = (index),
+// enum Commands {
+//     #include "commands.hpp"
+// };
+// #undef DEFINE_CMD_
+
+enum CmdTypes {
+    WO_ARGUMENTS,
+    WITH_NUMERIC_ARGUMENT,
+    JMP_TYPE,
 };
-#undef DEFINE_CMD_
 
 //typedef unsigned char processorCmd_t;
 // тут есть какой-то баг, а ещё санитайзер ругается..
