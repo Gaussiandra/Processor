@@ -1,3 +1,13 @@
+#define POP_IN_A_B                  \
+    processorData_t a = 0, b = 0;   \
+    stackPop(&stack, &a);           \
+    stackPop(&stack, &b);          
+
+#define POP_IN_A_B_AND_INC_PTR      \
+    POP_IN_A_B;                     \
+    ++instructionPtr;            
+
+
 // name, index, argType, code
 DEFINE_CMD_(hlt, 0, WO_ARGUMENTS, {})
 DEFINE_CMD_(push, 1, WITH_NUMERIC_ARGUMENT, ({
@@ -28,25 +38,16 @@ DEFINE_CMD_(pop, 2, WITH_NUMERIC_ARGUMENT, ({
     instructionPtr += 2;
 }))
 DEFINE_CMD_(mul, 3, WO_ARGUMENTS, ({
-    processorData_t a = 0, b = 0;
-    stackPop(&stack, &a);
-    stackPop(&stack, &b);
+    POP_IN_A_B_AND_INC_PTR;
     stackPush(&stack, a * b);
-    ++instructionPtr;
 }))
 DEFINE_CMD_(add, 4, WO_ARGUMENTS, ({
-    processorData_t a = 0, b = 0;
-    stackPop(&stack, &a);
-    stackPop(&stack, &b);
+    POP_IN_A_B_AND_INC_PTR;
     stackPush(&stack, a + b);
-    ++instructionPtr;
 }))
 DEFINE_CMD_(sub, 5, WO_ARGUMENTS, ({
-    processorData_t a = 0, b = 0;
-    stackPop(&stack, &a);
-    stackPop(&stack, &b);
+    POP_IN_A_B_AND_INC_PTR;
     stackPush(&stack, b - a);
-    ++instructionPtr;
 }))
 DEFINE_CMD_(in, 6, WO_ARGUMENTS, ({
     processorData_t a = 0;
@@ -64,9 +65,7 @@ DEFINE_CMD_(jmp, 8, JMP_TYPE, ({
     instructionPtr = codeArr[instructionPtr + 1];
 }))
 DEFINE_CMD_(ja, 9, JMP_TYPE, ({
-    processorData_t a = 0, b = 0;
-    stackPop(&stack, &a);
-    stackPop(&stack, &b);
+    POP_IN_A_B;
     if (b > a) {
         instructionPtr = codeArr[instructionPtr + 1];
     }
@@ -75,9 +74,7 @@ DEFINE_CMD_(ja, 9, JMP_TYPE, ({
     }
 }))
 DEFINE_CMD_(jae, 10, JMP_TYPE, ({
-    processorData_t a = 0, b = 0;
-    stackPop(&stack, &a);
-    stackPop(&stack, &b);
+    POP_IN_A_B;
     if (b >= a) {
         instructionPtr = codeArr[instructionPtr + 1];
     }
@@ -86,9 +83,7 @@ DEFINE_CMD_(jae, 10, JMP_TYPE, ({
     }
 }))
 DEFINE_CMD_(jb, 11, JMP_TYPE, ({
-    processorData_t a = 0, b = 0;
-    stackPop(&stack, &a);
-    stackPop(&stack, &b);
+    POP_IN_A_B;
     if (b < a) {
         instructionPtr = codeArr[instructionPtr + 1];
     }
@@ -97,9 +92,7 @@ DEFINE_CMD_(jb, 11, JMP_TYPE, ({
     }
 }))
 DEFINE_CMD_(jbe, 12, JMP_TYPE, ({
-    processorData_t a = 0, b = 0;
-    stackPop(&stack, &a);
-    stackPop(&stack, &b);
+    POP_IN_A_B;
     if (b <= a) {
         instructionPtr = codeArr[instructionPtr + 1];
     }
@@ -108,9 +101,7 @@ DEFINE_CMD_(jbe, 12, JMP_TYPE, ({
     }
 }))
 DEFINE_CMD_(je, 13, JMP_TYPE, ({
-    processorData_t a = 0, b = 0;
-    stackPop(&stack, &a);
-    stackPop(&stack, &b);
+    POP_IN_A_B;
     if (b == a) {
         instructionPtr = codeArr[instructionPtr + 1];
     }
@@ -119,9 +110,7 @@ DEFINE_CMD_(je, 13, JMP_TYPE, ({
     }
 }))
 DEFINE_CMD_(jne, 14, JMP_TYPE, ({
-    processorData_t a = 0, b = 0;
-    stackPop(&stack, &a);
-    stackPop(&stack, &b);
+    POP_IN_A_B;
     if (b != a) {
         instructionPtr = codeArr[instructionPtr + 1];
     }
