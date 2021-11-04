@@ -8,11 +8,8 @@ enum CmdTypes {
     JMP_TYPE,
 };
 
-//typedef unsigned char processorCmd_t;
-// тут есть какой-то баг, а ещё санитайзер ругается..
 typedef int32_t processorData_t;
 
-//хочется union + bitfields c int
 const processorData_t IMMEDIATE_CONST_CMD = 1;
 const processorData_t REGISTER_CMD        = 2;
 const processorData_t MEMORY_CMD          = 4;
