@@ -1,9 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <unistd.h>
+#include <cmath>
 #include "processor.hpp"
 #include "../SaveStack/stack.hpp"
-#include "../globalUtils.hpp"
+#include "../globalUtils.hpp" 
 
 int main(const int argc, const char *argv[]) {
     char *inpFilePath = nullptr;

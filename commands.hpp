@@ -1,6 +1,10 @@
+#define POP_IN_A                    \
+    processorData_t a = 0;          \
+    stackPop(&stack, &a)
+
 #define POP_IN_A_B                  \
-    processorData_t a = 0, b = 0;   \
-    stackPop(&stack, &a);           \
+    POP_IN_A;                       \
+    processorData_t b = 0;          \
     stackPop(&stack, &b);          
 
 #define POP_IN_A_B_AND_INC_PTR      \
@@ -12,7 +16,7 @@
 DEFINE_CMD_(hlt, 0, WO_ARGUMENTS, {})
 DEFINE_CMD_(push, 1, WITH_NUMERIC_ARGUMENT, ({
     if ((codeArr[instructionPtr] & FLAGS_RANGE_CMD) == IMMEDIATE_CONST_CMD) {
-        stackPush(&stack, codeArr[instructionPtr + 1]);
+        stackPush(&stack, codeArr[instructionPtr + 1] * FLOAT_PRECISION);
     }
     else if (processorData_t *pushArg = getPtrWrtFlags(codeArr + instructionPtr, registers, ram)) {
         stackPush(&stack, *pushArg);
@@ -39,7 +43,7 @@ DEFINE_CMD_(pop, 2, WITH_NUMERIC_ARGUMENT, ({
 }))
 DEFINE_CMD_(mul, 3, WO_ARGUMENTS, ({
     POP_IN_A_B_AND_INC_PTR;
-    stackPush(&stack, a * b);
+    stackPush(&stack, a / FLOAT_PRECISION * b);
 }))
 DEFINE_CMD_(add, 4, WO_ARGUMENTS, ({
     POP_IN_A_B_AND_INC_PTR;
@@ -52,13 +56,17 @@ DEFINE_CMD_(sub, 5, WO_ARGUMENTS, ({
 DEFINE_CMD_(in, 6, WO_ARGUMENTS, ({
     processorData_t a = 0;
     scanf("%d", &a);
-    stackPush(&stack, a);
+    stackPush(&stack, a * FLOAT_PRECISION);
     ++instructionPtr;
 }))
 DEFINE_CMD_(out, 7, WO_ARGUMENTS, ({
-    processorData_t a = 0;
-    stackPop(&stack, &a);
-    printf("%d\n", a);
+    POP_IN_A;
+    if (a >= 0) {
+        printf("%d.%d\n", a / FLOAT_PRECISION, a % FLOAT_PRECISION);
+    }
+    else {
+        printf("-%d.%d\n", abs(a / FLOAT_PRECISION), abs(a % FLOAT_PRECISION));
+    }
     ++instructionPtr;
 }))
 DEFINE_CMD_(jmp, 8, JMP_TYPE, ({
@@ -131,7 +139,15 @@ DEFINE_CMD_(call, 16, JMP_TYPE, ({
     instructionPtr = codeArr[instructionPtr + 1];
 }))
 DEFINE_CMD_(ret, 17, WO_ARGUMENTS, ({
-    processorData_t a = 0;
-    stackPop(&stack, &a);
+    POP_IN_A;
     instructionPtr = a;
+}))
+DEFINE_CMD_(div, 18, WO_ARGUMENTS, ({
+    POP_IN_A_B_AND_INC_PTR;
+    stackPush(&stack, b * FLOAT_PRECISION / a);
+}))
+DEFINE_CMD_(sqrt, 19, WO_ARGUMENTS, ({
+    POP_IN_A;
+    stackPush(&stack, (processorData_t) (sqrt(a / FLOAT_PRECISION) * FLOAT_PRECISION));
+    ++instructionPtr;
 }))

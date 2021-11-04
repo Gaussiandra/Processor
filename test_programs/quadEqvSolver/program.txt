@@ -1,0 +1,94 @@
+in
+pop ax ; A
+in
+pop bx ; B
+in
+pop cx ; C
+push ax
+push 0
+je a_is_zero
+push bx
+push bx
+mul
+push 4
+push ax
+push cx
+mul
+mul
+sub
+pop dx ; discriminant
+push dx
+push 0
+jb no_roots
+push dx
+push 0
+je desc_is_zero
+push dx
+push 0
+ja positive_desc
+no_roots:
+push -1
+push -1
+push -1
+out
+out
+out
+hlt
+positive_desc:
+push dx
+sqrt
+pop dx ; sqrt of discriminant
+push -1
+push bx
+mul
+push dx
+add
+push 2
+push ax
+mul
+div
+out
+push -1
+push bx
+mul
+push dx
+sub
+push 2
+push ax
+mul
+div
+out
+hlt
+desc_is_zero:
+push -1
+push bx
+mul
+push 2
+push ax
+mul
+div
+out
+hlt
+a_is_zero:
+push bx
+push 0
+je b_is_zero
+push -1 ; linear case
+push cx
+mul
+push bx
+div
+out
+hlt
+b_is_zero:
+push cx
+push 0
+je c_is_zero
+jmp no_roots
+c_is_zero:
+push 0 ; infinity roots
+out
+push 0
+out
+push 0
+out 
