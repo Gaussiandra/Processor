@@ -19,20 +19,24 @@ int main(const int argc, const char *argv[]) {
     bool hasArg = false;
     int labels[MAX_LABEL_COUNT] = {0};
     for (int i = 0; i < MAX_LABEL_COUNT; ++i) { labels[i] = -1; }
-    size_t instructionPtr = 0;
+    size_t instructionPtr = 0; 
 
+    // First pass
     while (instructionPtr < codeLen) {
         processorData_t curNumCmd = (codeArr[instructionPtr] >> COMMAND_OFFSET_CMD);
 
-        #define DEFINE_CMD_(name, index, argType, ...)                              \
-            case index: {                                                   \
-                if (argType == JMP_TYPE) {                                           \
-                    CONTINUE_IFN0(insertUniqueIdx(labels, MAX_LABEL_COUNT, \
-                                                  codeArr[instructionPtr + 1]));  \
-                    ++instructionPtr;  \
+        #define DEFINE_CMD_(name, index, argType, ...)                                  \
+            case index: {                                                               \
+                if (argType == JMP_TYPE) {                                              \
+                    CONTINUE_IFN0(insertUniqueIdx(labels, MAX_LABEL_COUNT,              \
+                                                  codeArr[++instructionPtr]));          \
+                                                                                        \
                 }                                                                       \
-                ++instructionPtr; \
-                break;\
+                else if (argType == WITH_NUMERIC_ARGUMENT) {                            \
+                    ++instructionPtr;                                                   \
+                }                                                                       \
+                ++instructionPtr;                                                       \
+                break;                                                                  \
             }                                                       
 
         switch (curNumCmd) {
@@ -43,36 +47,37 @@ int main(const int argc, const char *argv[]) {
         }
         #undef DEFINE_CMD_
     }
-
+    
+    // Second pass
     instructionPtr = 0;
     while (instructionPtr < codeLen) {
         processorData_t curNumCmd = (codeArr[instructionPtr] >> COMMAND_OFFSET_CMD);
 
-        #define DEFINE_CMD_(name, index, argType, ...)                              \
-            case index: {                                                               \
+    #define DEFINE_CMD_(name, index, argType, ...)                                    \
+            case index: {                                                             \
                 int labelIdx = getIdxFromArr(labels, MAX_LABEL_COUNT, instructionPtr);\
-                if (labelIdx != -1) {                                                       \
-                    fprintf(outputFile, "label_%d:\n", labelIdx);                       \
-                }                                                                           \
-                                                                                        \
-                if (argType == WO_ARGUMENTS) {                                      \
-                    fprintf(outputFile, "%s\n", #name);                             \
-                    ++instructionPtr;                                               \
-                }                                                                   \
-                else if (argType == WITH_NUMERIC_ARGUMENT) {                        \
-                    CONTINUE_IFN0(convertNumericCmd(codeArr[instructionPtr],        \
-                                                    codeArr[instructionPtr + 1],    \
-                                                    strToReturn, &hasArg));         \
-                    fprintf(outputFile, "%s %s\n", #name, strToReturn);             \
-                    instructionPtr += 1 + hasArg;                                   \
-                }                                                                   \
-                else if (argType == JMP_TYPE) {                                     \
-                    fprintf(outputFile, "%s label_%d\n", #name,                             \
+                if (labelIdx != -1) {                                                 \
+                    fprintf(outputFile, "label_%d:\n", labelIdx);                     \
+                }                                                                     \
+                                                                                      \
+                if (argType == WO_ARGUMENTS) {                                        \
+                    fprintf(outputFile, "%s\n", #name);                               \
+                    ++instructionPtr;                                                 \
+                }                                                                     \
+                else if (argType == WITH_NUMERIC_ARGUMENT) {                          \
+                    CONTINUE_IFN0(convertNumericCmd(codeArr[instructionPtr],          \
+                                                    codeArr[instructionPtr + 1],      \
+                                                    strToReturn, &hasArg));           \
+                    fprintf(outputFile, "%s %s\n", #name, strToReturn);               \
+                    instructionPtr += 1 + hasArg;                                     \
+                }                                                                     \
+                else if (argType == JMP_TYPE) {                                       \
+                    fprintf(outputFile, "%s label_%d\n", #name,                       \
                         getIdxFromArr(labels, MAX_LABEL_COUNT, codeArr[instructionPtr + 1]));\
-                    instructionPtr += 2;                                           \
-                }                                                                 \
-                                                                                        \
-            break;                                                              \
+                    instructionPtr += 2;                                              \
+                }                                                                     \
+                                                                                      \
+            break;                                                                    \
         }
 
         switch (curNumCmd) {
