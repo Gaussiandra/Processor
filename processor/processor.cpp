@@ -41,9 +41,6 @@ int main(const int argc, const char *argv[]) {
                 break;
         }
         #undef DEFINE_CMD_
-
-        //stackDump(&stack, ErrorCodes::OKAY, stdout); printf("\n\n");
-        //usleep(2000);
     }
     free(codeArr);
     codeArr = nullptr;

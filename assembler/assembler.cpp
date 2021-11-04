@@ -9,10 +9,8 @@ ProcErrorCodes mapTextToCodes(stringData *strings, size_t nStrings, processorDat
     assert(nStrings >= 0);
     assert(outputArray);
 
-    label_t labels[MAX_LABEL_COUNT] = {0}; // -1?
+    label_t labels[MAX_LABEL_COUNT] = {0};
     size_t instructionPtr = 0, szLabels = 0;
-
-    //добавить пробелы, табы, проверки
 
     char curCmd[MAX_INPUT_STR_LEN] = "";
     for (int kthPass = 0; kthPass < 2; ++kthPass) {
@@ -26,36 +24,35 @@ ProcErrorCodes mapTextToCodes(stringData *strings, size_t nStrings, processorDat
                 labels[szLabels++].instructionPtr = instructionPtr;
             }
             else if (curCmd[curCmdLastIdx] != ':') {
-                // вынести в функцию
-                #define DEFINE_CMD_(name, index, argType, ...)                                                 \
-                    if (strcmp(curCmd, #name) == 0) {                                                                              \
-                        processorData_t idxCmd = (index) << COMMAND_OFFSET_CMD, arg = 0;                                           \
-                        size_t nChanged = 0;                                                                                       \
-                                                                                                                                   \
-                        if (argType == WITH_NUMERIC_ARGUMENT) {    /*!!*/                                                                         \
+                #define DEFINE_CMD_(name, index, argType, ...)                                          \
+                    if (strcmp(curCmd, #name) == 0) {                                                   \
+                        processorData_t idxCmd = (index) << COMMAND_OFFSET_CMD, arg = 0;                \
+                        size_t nChanged = 0;                                                            \
+                                                                                                        \
+                        if (argType == WITH_NUMERIC_ARGUMENT) {                                         \
                             CONTINUE_IFN0(parseNumericArgument(strings[stringIdx].str, strlen(curCmd), &idxCmd, &arg, &nChanged)); \
-                            outputArray[instructionPtr++] = idxCmd;                                                                \
-                            if (nChanged > 1) {                                                                                    \
-                                outputArray[instructionPtr++] = arg;                                                               \
-                            }                                                                                                      \
-                        }                                                                                                          \
-                        else {                                                                                                     \
-                            outputArray[instructionPtr++] = idxCmd;                                                                \
-                            if (argType == JMP_TYPE) {                                                                                        \
-                                if (kthPass == 0) {                                                                                \
-                                    outputArray[instructionPtr++] = TEMP_CMD;                                                      \
-                                }                                                                                                  \
-                                else {                                                                                             \
-                                    int nReadArgs = sscanf(strings[stringIdx].str, "%*s %s", curCmd);                              \
-                                    assert(nReadArgs && "Incorrect jmp argument.");                                                \
-                                                                                                                                   \
-                                    size_t labelIdx = 0;                                                                    \
-                                    CONTINUE_IFN0(getIdxByName(labels, szLabels, &labelIdx, curCmd));                                \
-                                    outputArray[instructionPtr++] = labels[labelIdx].instructionPtr;                                                        \
-                                }                                                                                                  \
-                            }                                                                                                      \
-                        }                                                                                                          \
-                    }                                                                                                              \
+                            outputArray[instructionPtr++] = idxCmd;                                     \
+                            if (nChanged > 1) {                                                         \
+                                outputArray[instructionPtr++] = arg;                                    \
+                            }                                                                           \
+                        }                                                                               \
+                        else {                                                                          \
+                            outputArray[instructionPtr++] = idxCmd;                                     \
+                            if (argType == JMP_TYPE) {                                                  \
+                                if (kthPass == 0) {                                                     \
+                                    outputArray[instructionPtr++] = TEMP_CMD;                           \
+                                }                                                                       \
+                                else {                                                                  \
+                                    int nReadArgs = sscanf(strings[stringIdx].str, "%*s %s", curCmd);   \
+                                    assert(nReadArgs && "Incorrect jmp argument.");                     \
+                                                                                                        \
+                                    size_t labelIdx = 0;                                                \
+                                    CONTINUE_IFN0(getIdxByName(labels, szLabels, &labelIdx, curCmd));   \
+                                    outputArray[instructionPtr++] = labels[labelIdx].instructionPtr;    \
+                                }                                                                       \
+                            }                                                                           \
+                        }                                                                               \
+                    }                                                                                   \
                     else                                                                                    
 
                 #include "../commands.hpp" 
