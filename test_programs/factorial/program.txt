@@ -3,6 +3,8 @@ pop ax ; n
 push 1
 pop bx ; mult
 call factorial
+push bx
+out
 hlt
 factorial:
 push ax
@@ -13,10 +15,8 @@ push ax
 push 1
 sub
 pop ax
-push bx
-out
 push ax
-push 1
+push 0
 je end
 call factorial
 end:

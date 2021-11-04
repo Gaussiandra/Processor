@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdio>
 #include <cstdlib>
 
@@ -27,6 +29,7 @@ enum ProcErrorCodes {
     MEM_ALLOCATION_ERROR,
     UNKNOWN_COMMAND,
     LABEL_INDEX_NOT_FOUND,
+    NO_FREE_SPACE_IN_ARRAY,
 };
 
 ProcErrorCodes prepareStringsFromPath(const char *inpFilePath, char **rawData, stringData **strings, size_t *nStrings);
@@ -35,3 +38,4 @@ int initStringPtrs(char *rawData, stringData strings[], size_t szFile);
 ProcErrorCodes openFile(const char *inpFilePath, FILE **inpFile, const char *mode);
 long getFileSize(FILE *inpFile);
 ProcErrorCodes readDataFromPath(const char *inpFilePath, char **rawData, size_t *szFile, bool isBinary);
+ProcErrorCodes get2StrArgs(const int argc, const char *argv[], char **inpFilePath, char **outFilePath);

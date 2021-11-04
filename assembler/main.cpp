@@ -4,14 +4,7 @@
 
 int main(const int argc, const char *argv[]) {
     char *inpFilePath = nullptr, *outFilePath = nullptr;
-    if (argc == 3) {
-        inpFilePath = (char*) argv[1];
-        outFilePath = (char*) argv[2];
-    }
-    else {
-        printf("Invalid command line arguments.\nUsage: main.out input_path output_path.\n");
-        return ARGUMENTS_HANDLING_ERROR;
-    }
+    CONTINUE_IFN0(get2StrArgs(argc, argv, &inpFilePath, &outFilePath));
 
     char *rawData = nullptr;
     stringData *strings = nullptr;

@@ -19,14 +19,14 @@ int main(const int argc, const char *argv[]) {
     size_t szFile = 0;
     CONTINUE_IFN0(readDataFromPath(inpFilePath, (char **)&codeArr, &szFile, true));
 
-    size_t instuctionPtr = 0;
+    size_t instructionPtr = 0;
     processorData_t ram[RAM_LEN] = {0};
     processorData_t registers[N_REGISTERS] = {0};
     stack_t stack;
     stackCtor(stack);
 
-    while (codeArr[instuctionPtr]) {
-        processorData_t curNumCmd = codeArr[instuctionPtr] >> COMMAND_OFFSET_CMD;
+    while (codeArr[instructionPtr]) {
+        processorData_t curNumCmd = codeArr[instructionPtr] >> COMMAND_OFFSET_CMD;
 
         #define DEFINE_CMD_(name, index, argType, code)                             \
             case index: {                                                           \
@@ -37,13 +37,13 @@ int main(const int argc, const char *argv[]) {
         switch (curNumCmd) {
             #include "../commands.hpp"
             default:
-                ABORT_WITH_PRINTF(("Unknown command %d", codeArr[instuctionPtr]));
+                ABORT_WITH_PRINTF(("Unknown command %d", codeArr[instructionPtr]));
                 break;
         }
         #undef DEFINE_CMD_
 
         //stackDump(&stack, ErrorCodes::OKAY, stdout); printf("\n\n");
-        usleep(2000);
+        //usleep(2000);
     }
     free(codeArr);
     codeArr = nullptr;

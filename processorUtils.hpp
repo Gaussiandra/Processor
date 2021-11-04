@@ -1,10 +1,6 @@
-#include <cstdint>
+#pragma once
 
-// #define DEFINE_CMD_(name, index, nArguments, code) name = (index),
-// enum Commands {
-//     #include "commands.hpp"
-// };
-// #undef DEFINE_CMD_
+#include <cstdint>
 
 enum CmdTypes {
     WO_ARGUMENTS,

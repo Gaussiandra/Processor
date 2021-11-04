@@ -20,14 +20,13 @@ ProcErrorCodes mapTextToCodes(stringData *strings, size_t nStrings, processorDat
         for (size_t stringIdx = 0; stringIdx < nStrings; ++stringIdx) {  
             sscanf(strings[stringIdx].str, "%s", curCmd);
             size_t curCmdLastIdx = strlen(curCmd) - 1;
-            //char lastCurCmdChar = curCmd[strlen(curCmd) - 1];
             if (kthPass == 0 && curCmd[curCmdLastIdx] == ':') {
                 curCmd[curCmdLastIdx] = '\0';
                 strcpy(labels[szLabels].labelName, curCmd);
                 labels[szLabels++].instructionPtr = instructionPtr;
             }
             else if (curCmd[curCmdLastIdx] != ':') {
-                // вынести в функцию, nNum isJmp no в enum
+                // вынести в функцию
                 #define DEFINE_CMD_(name, index, argType, ...)                                                 \
                     if (strcmp(curCmd, #name) == 0) {                                                                              \
                         processorData_t idxCmd = (index) << COMMAND_OFFSET_CMD, arg = 0;                                           \
@@ -78,16 +77,14 @@ ProcErrorCodes parseNumericArgument(char *string, size_t cmdLen, processorData_t
 
     if (strlen(string) > cmdLen) {
         if (sscanf(string, "%*s %d", arg) == 1) {
-            //*arg -= '0';
             *idxCmd |= IMMEDIATE_CONST_CMD;
         }
         else if (sscanf(string, "%*s [%d]", arg) == 1) {
             *idxCmd |= IMMEDIATE_CONST_CMD | MEMORY_CMD;
         }
-        else if (sscanf(string, "%*s [%1[abcd]x + %c]", strArg, arg) == 2) {
-            // как поведёт себя с минусом? // сделать проверку на допустимость регистра, запретить pop 4
+        else if (sscanf(string, "%*s [%1[abcd]x + %d]", strArg, arg) == 2) {
             *idxCmd |= IMMEDIATE_CONST_CMD | REGISTER_CMD | MEMORY_CMD;
-            *arg = ((strArg[0] - 'a') << REGISTER_OFFSET_ARG) + *arg - '0';
+            *arg = ((strArg[0] - 'a') << REGISTER_OFFSET_ARG) + *arg;
         }
         else if (sscanf(string, "%*s [%1[abcd]x]", strArg) == 1) {
             *arg = (strArg[0] - 'a') << REGISTER_OFFSET_ARG;

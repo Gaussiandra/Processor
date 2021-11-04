@@ -120,3 +120,15 @@ ProcErrorCodes readDataFromPath(const char *inpFilePath, char **rawData, size_t 
 
     return OKAY;
 }
+
+ProcErrorCodes get2StrArgs(const int argc, const char *argv[], char **inpFilePath, char **outFilePath) {
+    if (argc == 3) {
+        *inpFilePath = (char*) argv[1];
+        *outFilePath = (char*) argv[2];
+        return OKAY;
+    }
+    else {
+        printf("Invalid command line arguments.\nUsage: file.out input_path output_path.\n");
+        return ARGUMENTS_HANDLING_ERROR;
+    }
+}

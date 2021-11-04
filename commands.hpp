@@ -1,7 +1,5 @@
 // name, index, argType, code
-DEFINE_CMD_(hlt, 0, WO_ARGUMENTS, {
-    printf("hlt\n");
-})
+DEFINE_CMD_(hlt, 0, WO_ARGUMENTS, {})
 DEFINE_CMD_(push, 1, WITH_NUMERIC_ARGUMENT, ({
     if ((codeArr[instuctionPtr] & FLAGS_RANGE_CMD) == IMMEDIATE_CONST_CMD) {
         stackPush(&stack, codeArr[instuctionPtr + 1]);
