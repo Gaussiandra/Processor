@@ -1,34 +1,42 @@
 #include <cstdio>
 #include <cstdlib>
+#include "disassembler.hpp"
 #include "../processorUtils.hpp"
 #include "../globalUtils.hpp"
-#include "disassembler.hpp"
 
 int main(const int argc, const char *argv[]) {
-    char *inpFilePath = nullptr, *outFilePath = nullptr;
-    CONTINUE_IFN0(get2StrArgs(argc, argv, &inpFilePath, &outFilePath));
+    const char *inpFilePath = nullptr, *outFilePath = nullptr;
+    RETURN_ON_ERROR(get2StrArgs(argc, argv, &inpFilePath, &outFilePath));
 
     processorData_t *codeArr = nullptr;
     size_t szFile = 0;
-    CONTINUE_IFN0(readDataFromPath(inpFilePath, (char **)&codeArr, &szFile, true));
+    RETURN_ON_ERROR(readDataFromPath(inpFilePath, (char **)&codeArr, &szFile, true));
     size_t codeLen = szFile / sizeof(processorData_t);
     FILE *outputFile = nullptr;
     openFile(outFilePath, &outputFile, "w");
 
-    char strToReturn[INT_TO_STR_BUFF_SZ] = {0}; 
-    bool hasArg = false;
     int labels[MAX_LABEL_COUNT] = {0};
-    for (int i = 0; i < MAX_LABEL_COUNT; ++i) { labels[i] = -1; }
-    size_t instructionPtr = 0; 
+    for (int i = 0; i < MAX_LABEL_COUNT; ++i) { labels[i] = -1; } 
 
-    // First pass
+    RETURN_ON_ERROR(execFirstPass (codeLen, codeArr, labels));
+    RETURN_ON_ERROR(execSecondPass(codeLen, codeArr, labels, outputFile));
+
+    fclose(outputFile);
+
+    free(codeArr);
+    codeArr = nullptr;
+}
+
+ProcErrorCodes execFirstPass(size_t codeLen, processorData_t codeArr[], int labels[]) {
+    size_t instructionPtr = 0;
+
     while (instructionPtr < codeLen) {
         processorData_t curNumCmd = (codeArr[instructionPtr] >> COMMAND_OFFSET_CMD);
 
         #define DEFINE_CMD_(name, index, argType, ...)                                  \
             case index: {                                                               \
                 if (argType == JMP_TYPE) {                                              \
-                    CONTINUE_IFN0(insertUniqueIdx(labels, MAX_LABEL_COUNT,              \
+                    RETURN_ON_ERROR(insertUniqueIdx(labels, MAX_LABEL_COUNT,            \
                                                   codeArr[++instructionPtr]));          \
                                                                                         \
                 }                                                                       \
@@ -42,18 +50,26 @@ int main(const int argc, const char *argv[]) {
         switch (curNumCmd) {
             #include "../commands.hpp"
             default:
-                ABORT_WITH_PRINTF(("Unknown command %d", codeArr[instructionPtr]));
-                break;
+            {
+                printf("Unknown command %d", codeArr[instructionPtr]);
+                return UNKNOWN_COMMAND;
+            }
         }
         #undef DEFINE_CMD_
     }
-    
-    // Second pass
-    instructionPtr = 0;
+
+    return OKAY;
+}
+
+ProcErrorCodes execSecondPass(size_t codeLen, processorData_t codeArr[], int labels[], FILE *outputFile) {
+    char strToReturn[INT_TO_STR_BUFF_SZ] = {0}; 
+    bool hasArg = false;
+    size_t instructionPtr = 0;
+
     while (instructionPtr < codeLen) {
         processorData_t curNumCmd = (codeArr[instructionPtr] >> COMMAND_OFFSET_CMD);
 
-    #define DEFINE_CMD_(name, index, argType, ...)                                    \
+        #define DEFINE_CMD_(name, index, argType, ...)                                \
             case index: {                                                             \
                 int labelIdx = getIdxFromArr(labels, MAX_LABEL_COUNT, instructionPtr);\
                 if (labelIdx != -1) {                                                 \
@@ -65,7 +81,7 @@ int main(const int argc, const char *argv[]) {
                     ++instructionPtr;                                                 \
                 }                                                                     \
                 else if (argType == WITH_NUMERIC_ARGUMENT) {                          \
-                    CONTINUE_IFN0(convertNumericCmd(codeArr[instructionPtr],          \
+                    RETURN_ON_ERROR(convertNumericCmd(codeArr[instructionPtr],        \
                                                     codeArr[instructionPtr + 1],      \
                                                     strToReturn, &hasArg));           \
                     fprintf(outputFile, "%s %s\n", #name, strToReturn);               \
@@ -73,7 +89,7 @@ int main(const int argc, const char *argv[]) {
                 }                                                                     \
                 else if (argType == JMP_TYPE) {                                       \
                     fprintf(outputFile, "%s label_%d\n", #name,                       \
-                        getIdxFromArr(labels, MAX_LABEL_COUNT, codeArr[instructionPtr + 1]));\
+                            getIdxFromArr(labels, MAX_LABEL_COUNT, codeArr[instructionPtr + 1])); \
                     instructionPtr += 2;                                              \
                 }                                                                     \
                                                                                       \
@@ -82,14 +98,16 @@ int main(const int argc, const char *argv[]) {
 
         switch (curNumCmd) {
             #include "../commands.hpp"
+            default:
+            {
+                printf("Unknown command %d", codeArr[instructionPtr]);
+                return UNKNOWN_COMMAND;
+            }
         }
         #undef DEFINE_CMD_
     }
 
-    fclose(outputFile);
-
-    free(codeArr);
-    codeArr = nullptr;
+    return OKAY;
 }
 
 ProcErrorCodes convertNumericCmd(processorData_t curCmd, processorData_t nextCmd, char strToReturn[], bool *hasArg) {

@@ -3,17 +3,11 @@
 #include <cstdio>
 #include <cstdlib>
 
-#define CONTINUE_IFN0(code) {          \
+#define RETURN_ON_ERROR(code) {        \
     ProcErrorCodes errorCode = (code); \
     if (errorCode) {                   \
         return errorCode;              \
     }                                  \
-}
-
-#define ABORT_WITH_PRINTF(format) {    \
-    printf format;                     \
-    fflush(stdout);                    \
-    abort();                           \
 }
 
 struct stringData {
@@ -38,4 +32,5 @@ int initStringPtrs(char *rawData, stringData strings[], size_t szFile);
 ProcErrorCodes openFile(const char *inpFilePath, FILE **inpFile, const char *mode);
 long getFileSize(FILE *inpFile);
 ProcErrorCodes readDataFromPath(const char *inpFilePath, char **rawData, size_t *szFile, bool isBinary);
-ProcErrorCodes get2StrArgs(const int argc, const char *argv[], char **inpFilePath, char **outFilePath);
+ProcErrorCodes get2StrArgs(const int argc, const char *argv[], const char **inpFilePath, const char **outFilePath);
+ProcErrorCodes saveArrayToBinFile(char outputArray[], size_t nArrayElements, size_t elementSize, const char *outFilePath);

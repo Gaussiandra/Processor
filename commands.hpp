@@ -18,11 +18,12 @@ DEFINE_CMD_(push, 1, WITH_NUMERIC_ARGUMENT, ({
     if ((codeArr[instructionPtr] & FLAGS_RANGE_CMD) == IMMEDIATE_CONST_CMD) {
         stackPush(&stack, codeArr[instructionPtr + 1] * FLOAT_PRECISION);
     }
-    else if (processorData_t *pushArg = getPtrWrtFlags(codeArr + instructionPtr, registers, ram)) {
+    else if (processorData_t *pushArg = getCmdDestByFlags(codeArr + instructionPtr, registers, ram)) {
         stackPush(&stack, *pushArg);
     }
     else {
-        ABORT_WITH_PRINTF(("Unknown flag set. Command = %d\n", codeArr[instructionPtr]));
+        printf("Unknown flag set. Command = %d\n", codeArr[instructionPtr]);
+        return UNKNOWN_COMMAND;
     }
 
     instructionPtr += 2;
@@ -32,11 +33,12 @@ DEFINE_CMD_(pop, 2, WITH_NUMERIC_ARGUMENT, ({
         processorData_t value;
         stackPop(&stack, &value);
     }
-    else if (processorData_t *popArg = getPtrWrtFlags(codeArr + instructionPtr, registers, ram)) {
+    else if (processorData_t *popArg = getCmdDestByFlags(codeArr + instructionPtr, registers, ram)) {
         stackPop(&stack, popArg);
     }
     else {
-        ABORT_WITH_PRINTF(("Unknown flag set. Command = %d\n", codeArr[instructionPtr]));
+        printf("Unknown flag set. Command = %d\n", codeArr[instructionPtr]);
+        return UNKNOWN_COMMAND;
     }
 
     instructionPtr += 2;
@@ -70,12 +72,12 @@ DEFINE_CMD_(out, 7, WO_ARGUMENTS, ({
     ++instructionPtr;
 }))
 DEFINE_CMD_(jmp, 8, JMP_TYPE, ({
-    instructionPtr = codeArr[instructionPtr + 1];
+    instructionPtr = (size_t) codeArr[instructionPtr + 1];
 }))
 DEFINE_CMD_(ja, 9, JMP_TYPE, ({
     POP_IN_A_B;
     if (b > a) {
-        instructionPtr = codeArr[instructionPtr + 1];
+        instructionPtr = (size_t) codeArr[instructionPtr + 1];
     }
     else {
         instructionPtr += 2;
@@ -84,7 +86,7 @@ DEFINE_CMD_(ja, 9, JMP_TYPE, ({
 DEFINE_CMD_(jae, 10, JMP_TYPE, ({
     POP_IN_A_B;
     if (b >= a) {
-        instructionPtr = codeArr[instructionPtr + 1];
+        instructionPtr = (size_t) codeArr[instructionPtr + 1];
     }
     else {
         instructionPtr += 2;
@@ -93,7 +95,7 @@ DEFINE_CMD_(jae, 10, JMP_TYPE, ({
 DEFINE_CMD_(jb, 11, JMP_TYPE, ({
     POP_IN_A_B;
     if (b < a) {
-        instructionPtr = codeArr[instructionPtr + 1];
+        instructionPtr = (size_t) codeArr[instructionPtr + 1];
     }
     else {
         instructionPtr += 2;
@@ -102,7 +104,7 @@ DEFINE_CMD_(jb, 11, JMP_TYPE, ({
 DEFINE_CMD_(jbe, 12, JMP_TYPE, ({
     POP_IN_A_B;
     if (b <= a) {
-        instructionPtr = codeArr[instructionPtr + 1];
+        instructionPtr = (size_t) codeArr[instructionPtr + 1];
     }
     else {
         instructionPtr += 2;
@@ -111,7 +113,7 @@ DEFINE_CMD_(jbe, 12, JMP_TYPE, ({
 DEFINE_CMD_(je, 13, JMP_TYPE, ({
     POP_IN_A_B;
     if (b == a) {
-        instructionPtr = codeArr[instructionPtr + 1];
+        instructionPtr = (size_t) codeArr[instructionPtr + 1];
     }
     else {
         instructionPtr += 2;
@@ -120,7 +122,7 @@ DEFINE_CMD_(je, 13, JMP_TYPE, ({
 DEFINE_CMD_(jne, 14, JMP_TYPE, ({
     POP_IN_A_B;
     if (b != a) {
-        instructionPtr = codeArr[instructionPtr + 1];
+        instructionPtr = (size_t) codeArr[instructionPtr + 1];
     }
     else {
         instructionPtr += 2;
@@ -128,19 +130,19 @@ DEFINE_CMD_(jne, 14, JMP_TYPE, ({
 }))
 DEFINE_CMD_(js, 15, JMP_TYPE, ({
     if (rand() % 2) {
-        instructionPtr = codeArr[instructionPtr + 1];
+        instructionPtr = (size_t) codeArr[instructionPtr + 1];
     }
     else {
         instructionPtr += 2;
     }
 }))
 DEFINE_CMD_(call, 16, JMP_TYPE, ({
-    stackPush(&stack, instructionPtr + 2);
-    instructionPtr = codeArr[instructionPtr + 1];
+    stackPush(&stack, (processorData_t) instructionPtr + 2);
+    instructionPtr = (size_t) codeArr[instructionPtr + 1];
 }))
 DEFINE_CMD_(ret, 17, WO_ARGUMENTS, ({
     POP_IN_A;
-    instructionPtr = a;
+    instructionPtr = (size_t) a;
 }))
 DEFINE_CMD_(div, 18, WO_ARGUMENTS, ({
     POP_IN_A_B_AND_INC_PTR;

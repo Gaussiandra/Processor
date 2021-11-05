@@ -91,4 +91,5 @@ out
 push 0
 out
 push 0
-out 
+out
+hlt

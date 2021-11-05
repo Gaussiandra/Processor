@@ -30,7 +30,7 @@ ProcErrorCodes mapTextToCodes(stringData *strings, size_t nStrings, processorDat
                         size_t nChanged = 0;                                                            \
                                                                                                         \
                         if (argType == WITH_NUMERIC_ARGUMENT) {                                         \
-                            CONTINUE_IFN0(parseNumericArgument(strings[stringIdx].str, strlen(curCmd), &idxCmd, &arg, &nChanged)); \
+                            RETURN_ON_ERROR(parseNumericArgument(strings[stringIdx].str, strlen(curCmd), &idxCmd, &arg, &nChanged)); \
                             outputArray[instructionPtr++] = idxCmd;                                     \
                             if (nChanged > 1) {                                                         \
                                 outputArray[instructionPtr++] = arg;                                    \
@@ -47,7 +47,7 @@ ProcErrorCodes mapTextToCodes(stringData *strings, size_t nStrings, processorDat
                                     assert(nReadArgs && "Incorrect jmp argument.");                     \
                                                                                                         \
                                     size_t labelIdx = 0;                                                \
-                                    CONTINUE_IFN0(getIdxByName(labels, szLabels, &labelIdx, curCmd));   \
+                                    RETURN_ON_ERROR(getIdxByName(labels, szLabels, &labelIdx, curCmd)); \
                                     outputArray[instructionPtr++] = labels[labelIdx].instructionPtr;    \
                                 }                                                                       \
                             }                                                                           \
@@ -56,7 +56,10 @@ ProcErrorCodes mapTextToCodes(stringData *strings, size_t nStrings, processorDat
                     else                                                                                    
 
                 #include "../commands.hpp" 
-                    ABORT_WITH_PRINTF(("Unknown command at line %zu.\n", stringIdx + 1));
+                {
+                    printf("Unknown command at line %zu.\n", stringIdx + 1);
+                    return UNKNOWN_COMMAND;
+                }
                 #undef DEFINE_CMD_
             }   
         }
@@ -100,16 +103,6 @@ ProcErrorCodes parseNumericArgument(char *string, size_t cmdLen, processorData_t
     else {
         *nChanged = 1;
     }
-    return OKAY;
-}
-
-ProcErrorCodes saveArrayToBinFile(processorData_t outputArray[], size_t nArrayElements, char *outFilePath) {
-    FILE *outFile = nullptr;
-    CONTINUE_IFN0(openFile(outFilePath, &outFile, "wb"));
-    
-    fwrite(outputArray, sizeof(processorData_t), nArrayElements, outFile);
-    fclose(outFile);
-
     return OKAY;
 }
 

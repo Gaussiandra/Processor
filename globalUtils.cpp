@@ -8,7 +8,7 @@ ProcErrorCodes prepareStringsFromPath(const char *inpFilePath, char **rawData, s
     assert(rawData);
 
     size_t szFile = 0;
-    CONTINUE_IFN0(readDataFromPath(inpFilePath, rawData, &szFile, false));
+    RETURN_ON_ERROR(readDataFromPath(inpFilePath, rawData, &szFile, false));
 
     *nStrings = replaceChars('\n', '\0', *rawData) + 1;
     // nStrings + 1 for nullptr at the end of array for security purposes
@@ -92,10 +92,10 @@ ProcErrorCodes readDataFromPath(const char *inpFilePath, char **rawData, size_t 
 
     FILE *inpFile = nullptr;
     if (isBinary) {
-        CONTINUE_IFN0(openFile(inpFilePath, &inpFile, "rb"));
+        RETURN_ON_ERROR(openFile(inpFilePath, &inpFile, "rb"));
     }
     else {
-        CONTINUE_IFN0(openFile(inpFilePath, &inpFile, "r"));
+        RETURN_ON_ERROR(openFile(inpFilePath, &inpFile, "r"));
     }
 
     long signedSzFile = getFileSize(inpFile);
@@ -121,14 +121,24 @@ ProcErrorCodes readDataFromPath(const char *inpFilePath, char **rawData, size_t 
     return OKAY;
 }
 
-ProcErrorCodes get2StrArgs(const int argc, const char *argv[], char **inpFilePath, char **outFilePath) {
+ProcErrorCodes get2StrArgs(const int argc, const char *argv[], const char **inpFilePath, const char **outFilePath) {
     if (argc == 3) {
-        *inpFilePath = (char*) argv[1];
-        *outFilePath = (char*) argv[2];
+        *inpFilePath = argv[1];
+        *outFilePath = argv[2];
         return OKAY;
     }
     else {
         printf("Invalid command line arguments.\nUsage: file.out input_path output_path.\n");
         return ARGUMENTS_HANDLING_ERROR;
     }
+}
+
+ProcErrorCodes saveArrayToBinFile(char outputArray[], size_t nArrayElements, size_t elementSize, const char *outFilePath) {
+    FILE *outFile = nullptr;
+    RETURN_ON_ERROR(openFile(outFilePath, &outFile, "wb"));
+    
+    fwrite(outputArray, elementSize, nArrayElements, outFile);
+    fclose(outFile);
+
+    return OKAY;
 }

@@ -16,7 +16,7 @@ asm: assembler.out
 	./$(asmDir)/assembler.out $(args)
 
 processor.out:
-	g++ $(procDir)/processor.cpp globalUtils.cpp $(stackDir)/stack.cpp $(stackDir)/utils.cpp -o $(procDir)/processor.out
+	g++ $(procDir)/processor.cpp globalUtils.cpp $(stackDir)/stack.cpp $(stackDir)/utils.cpp -o $(procDir)/processor.out $(CXX_Flags)
 
 proc: processor.out
 	./$(procDir)/processor.out $(args)

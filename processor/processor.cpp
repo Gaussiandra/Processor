@@ -7,9 +7,9 @@
 #include "../globalUtils.hpp" 
 
 int main(const int argc, const char *argv[]) {
-    char *inpFilePath = nullptr;
+    const char *inpFilePath = nullptr;
     if (argc == 2) {
-        inpFilePath = (char*) argv[1];
+        inpFilePath = argv[1];
     }
     else {
         printf("Invalid command line arguments.\nUsage: processor.out input_path.\n");
@@ -18,8 +18,18 @@ int main(const int argc, const char *argv[]) {
 
     processorData_t *codeArr = nullptr;
     size_t szFile = 0;
-    CONTINUE_IFN0(readDataFromPath(inpFilePath, (char **)&codeArr, &szFile, true));
+    RETURN_ON_ERROR(readDataFromPath(inpFilePath, (char **)&codeArr, &szFile, true));
 
+    RETURN_ON_ERROR(execBinCode(codeArr));
+
+    free(codeArr);
+    codeArr = nullptr;
+    
+
+    return 0;
+}
+
+ProcErrorCodes execBinCode(processorData_t *codeArr) {
     size_t instructionPtr = 0;
     processorData_t ram[RAM_LEN] = {0};
     processorData_t registers[N_REGISTERS] = {0};
@@ -38,23 +48,22 @@ int main(const int argc, const char *argv[]) {
         switch (curNumCmd) {
             #include "../commands.hpp"
             default:
-                ABORT_WITH_PRINTF(("Unknown command %d", codeArr[instructionPtr]));
-                break;
+                printf("Unknown command %d", codeArr[instructionPtr]);
+                return UNKNOWN_COMMAND;
         }
         #undef DEFINE_CMD_
     }
-    free(codeArr);
-    codeArr = nullptr;
 
-    return 0;
+    stackDtor(&stack);
+    return OKAY;
 }
 
-processorData_t* accessRam(processorData_t ram[], size_t addr) {
+processorData_t* accessRam(processorData_t ram[], processorData_t addr) {
     usleep(RAM_ACCESS_DELAY_MS);
     return ram + addr;
 }
 
-processorData_t* getPtrWrtFlags(processorData_t *curCmdPtr, processorData_t registers[], processorData_t ram[]) {
+processorData_t* getCmdDestByFlags(processorData_t *curCmdPtr, processorData_t registers[], processorData_t ram[]) {
     processorData_t nextFullCmd = *(curCmdPtr + 1),
                     curCmdFlags = *curCmdPtr & FLAGS_RANGE_CMD;
 

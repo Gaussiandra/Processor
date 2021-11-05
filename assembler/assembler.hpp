@@ -14,5 +14,4 @@ struct label_t {
 
 ProcErrorCodes mapTextToCodes(stringData *strings, size_t nStrings, processorData_t outputArray[], size_t *nArrayElements);
 ProcErrorCodes parseNumericArgument(char *string, size_t cmdLen, processorData_t *idxCmd, processorData_t *arg, size_t *nChanged);
-ProcErrorCodes saveArrayToBinFile(processorData_t outputArray[], size_t nArrayElements, char *outFilePath);
 ProcErrorCodes getIdxByName(label_t arr[], size_t arrSize, size_t *indexToReturn, char name[]);
